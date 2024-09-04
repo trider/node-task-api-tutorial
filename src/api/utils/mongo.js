@@ -16,7 +16,6 @@ const mongoAPI = {
       return res
     }).catch(error => {
       console.log(error)
-      // return {status:error}
     });
     await client.close()
     return resp
@@ -40,10 +39,6 @@ const mongoAPI = {
     });
     await client.close()
     return resp
-   
-    
- 
-    
   },
 
   async getItemObjectsByID(args) {
