@@ -27,7 +27,6 @@ const mongoAPI = {
     await client.connect();
     const database = client.db(args.db);
     const data = database.collection(args.collection);
-    // 
     let qry = {}
     qry[args.field] = ObjectId(args.id)
     const resp = await data.findOne(qry).then(res => {
