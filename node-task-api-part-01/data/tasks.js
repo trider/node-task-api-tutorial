@@ -1,4 +1,4 @@
-const userTasks= [
+const tasks= [
  {
    id: "6630ab326e723ac1ea6dce7a",
    description: "My first task",
@@ -39,4 +39,4 @@ const userTasks= [
 
 ]
 
-export default userTasks
+module.exports = tasks;
