@@ -1,0 +1,30 @@
+{
+  "name": "node-task-api",
+  "version": "1.0.0",
+  "description": "node task api using express and mongoDB",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trider/node-task-.git"
+  },
+  "keywords": [
+    "node",
+    "tasks",
+    "express"
+  ],
+  "author": "jgold",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/trider/node-task-api/issues"
+  },
+  "homepage": "https://github.com/trider/node-task-api#readme",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1"
+  }
+
+}
