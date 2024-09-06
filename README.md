@@ -10,4 +10,4 @@ Now I covered the basics of building web applications with React and Angular, I 
 
 The tutorial includes the following installments:
 
-* [Part 1]("https://github.com/trider/node-task-api-tutorial/tree/main/node-task-api-part-01" "node-task-api-tutorial") Getting Started
+* [Part 1](https://github.com/trider/node-task-api-tutorial/tree/main/node-task-api-part-01 "ng-task-api-part-01"): Node JS Express for FrontEnd Developers Part One: Getting Starting
