@@ -103,8 +103,6 @@ app.get('/', (req, res) => {
 
 When you open the browser to [http://localhost:3000](http://localhost:3000), you are redirected to:
 
-
-
 ## **Querying Data with Parameterized Endpoints**
 
 Our first endpoint returned all users, but what if we only need a specific user’s profile? We can extend our existing endpoint with a username parameter.
