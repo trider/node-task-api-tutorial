@@ -4,7 +4,6 @@ const router = express.Router();
 const tasks = require('../data/tasks');
 
 router.get('/:dir?', (req, res) =>{
-  console.log(req.params.dir);
   if(req.params?.dir===undefined ||req.params.dir === 'asc'){
     res.json(tasks.sort((a, b) => (a.taskId > b.taskId) ? 1 : -1));
   }

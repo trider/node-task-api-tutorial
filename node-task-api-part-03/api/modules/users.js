@@ -24,8 +24,6 @@ router.post('/login', (req, res) => {
   else{
     res.json({message: 'Login failed', isAuthenticated: false});
   }
-
-  
 });
 
 module.exports = router;

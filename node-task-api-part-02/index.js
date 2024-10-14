@@ -26,19 +26,15 @@ app.get('/api/users/:user', (req, res) => {
 
 app.post('/api/users/login', (req, res) => {
   if(users.find(user => user.email === req.body.email && user.password === req.body.password)){
-    res.json(
-      {
+    res.json({
         ...users.find(user => user.email === req.body.email && user.password === req.body.password),
         message: 'Login successful',
         isAuthenticated: true
-      }
-    );
+      });
   }
   else{
     res.json({message: 'Login failed', isAuthenticated: false});
   }
-
-  
 });
 
 
