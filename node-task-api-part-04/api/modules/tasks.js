@@ -27,7 +27,7 @@ router.post('/add', (req, res) =>{
 })
 
 router.put('/update/:taskId', (req, res) =>{
-  tasks.map(task => {
+  tasks = tasks.map(task => {
     if(task.taskId === parseInt(req.params.taskId)){
       task = req.body;
     }
@@ -38,7 +38,8 @@ router.put('/update/:taskId', (req, res) =>{
 })
 
 router.delete('/delete/:taskId', (req, res) =>{
-  res.json(tasks.filter(task => task.taskId !== parseInt(req.params.taskId)));
+  tasks = tasks.filter(task => task.taskId !== parseInt(req.params.taskId));
+  res.json(tasks);
 })
 
 module.exports = router;
