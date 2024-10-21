@@ -4,7 +4,7 @@ const mongoAPI = require('./mongo');
 
 router.get('/user/:user',  (req, res) =>{
    const getData = new Promise((resolve) => {
-      mongoAPI.getItemsData(
+      mongoAPI.getItems(
         { db: 'tasksDB', collection: 'tasks', query: { user: req.params.user, isActive:true } }
       ).then((data, err) => resolve(data))
     }).then((data) => {
@@ -16,7 +16,7 @@ router.get('/user/:user',  (req, res) =>{
 
 router.get('/task/:taskId',  (req, res) =>{
    const getData = new Promise((resolve) => {
-      mongoAPI.getItemData(
+      mongoAPI.getItem(
         { db: 'tasksDB', collection: 'tasks', query: { taskId:parseInt(req.params.taskId)} }
       ).then((data, err) => resolve(data))
     }).then((data) => {
@@ -26,19 +26,18 @@ router.get('/task/:taskId',  (req, res) =>{
     return getData.then(data => data).catch((err) => console.log(err))
 });
 
-
 router.post('/create', (req, res) => {
    let tasks = null
       let taskId = null
       const getData = new Promise((resolve) => {
-        mongoAPI.getItemsData(
+        mongoAPI.getItems(
           { db: 'tasksDB', collection: 'tasks', query: {} }
         ).then((data, err) => resolve(data))
 
       }).then((data) => {
         tasks = data
         taskId = tasks.length + 1
-        return mongoAPI.writeItemData({
+        return mongoAPI.writeItem({
           db: 'tasksDB',
           collection: 'tasks',
           data: {
@@ -51,7 +50,7 @@ router.post('/create', (req, res) => {
           }
         })
       }).then((data) => {
-        return mongoAPI.getItemData(
+        return mongoAPI.getItem(
           { db: 'tasksDB', collection: 'tasks', query: { "taskId": taskId } }
         )
       }).then((data) => {
@@ -67,13 +66,13 @@ router.post('/create', (req, res) => {
 
 router.post('/update/:taskId', (req, res) => {
    const getData = new Promise((resolve) => {
-      mongoAPI.updateItemData(
+      mongoAPI.updateItem(
         { db: 'tasksDB', collection: 'tasks', query: { taskId: req.params.taskId }, data: req.body }
       ).then((data, err) => resolve(data))
     }).then((data) => {
 
       console.log(data.result)
-      return mongoAPI.getItemData(
+      return mongoAPI.getItem(
         { db: 'tasksDB', collection: 'tasks', query: { taskId: req.params.taskId } }
       )
     }).then((data) => {
@@ -86,8 +85,7 @@ router.post('/update/:taskId', (req, res) => {
 
 router.post('/delete', (req, res) => {
   const getData = new Promise((resolve) => {
-    console.log(req.body)
-    mongoAPI.updateItemData(
+    mongoAPI.updateItems(
       {
         db: 'tasksDB',
         collection: 'tasks',
@@ -100,7 +98,7 @@ router.post('/delete', (req, res) => {
     ).then((data, err) => resolve(data))
   }).then((data) => {
     console.log(data.result)
-    return mongoAPI.getItemData(
+    return mongoAPI.getItem(
       { db: 'tasksDB', collection: 'tasks', query: { "taskId": parseInt(req.body.taskId)} }
     )
   }).then((data) => {
