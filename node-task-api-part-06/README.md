@@ -1,4 +1,4 @@
-# **Node JS Express for FrontEnd Developers Part Five: Managing Data with MongoDB**
+# **Node JS Express for FrontEnd Developers Part Six: Task API Integration*
 
 In [Part Five](https://www.linkedin.com/pulse/node-js-express-frontend-developers-part-five-managing-jonathan-gold-xkq2f/?trackingId=IIFGsJ%2BmSD6b4EpWCf5eZQ%3D%3D) of this series, we integrated the User API with MongoDB. We started by installing MongoDB, creating a database, and populating the users collection. Next, we created a Mongo module that enabled us to query a single item or items from MongoDB. We concluded this installment by updating the Users module to take advantage of MongoDB. In this installment, we will add and populate a new taskDB collection named tasks. Next, we will update the Mongo module with functions that create and update a document in a collection. Finally, we will integrate the existing and new MongoDB functionality with the existing Task API routes. As with previous installments, the sample code and files for this installment can be downloaded from [GitHub](https://github.com/trider/node-task-api-tutorial/tree/main/node-task-api-part-02). 
 
