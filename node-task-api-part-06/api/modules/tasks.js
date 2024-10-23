@@ -26,7 +26,7 @@ router.get('/task/:taskId',  (req, res) =>{
     return getData.then(data => data).catch((err) => console.log(err))
 });
 
-router.post('/create', (req, res) => {
+router.post('/add', (req, res) => {
    let tasks = null
       let taskId = null
       const getData = new Promise((resolve) => {
@@ -85,7 +85,7 @@ router.post('/update/:taskId', (req, res) => {
 
 router.post('/delete', (req, res) => {
   const getData = new Promise((resolve) => {
-    mongoAPI.updateItems(
+    mongoAPI.updateItem(
       {
         db: 'tasksDB',
         collection: 'tasks',
