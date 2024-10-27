@@ -1,6 +1,6 @@
 # **Node JS Express for FrontEnd Developers Part Six: Task API Integration**
 
-In [Part Five](https://www.linkedin.com/pulse/node-js-express-frontend-developers-part-five-managing-jonathan-gold-xkq2f/?trackingId=IIFGsJ%2BmSD6b4EpWCf5eZQ%3D%3D) of this series, we integrated the User API with MongoDB. We started by installing MongoDB, creating a database, and populating the users collection. Next, we created a Mongo module that enabled us to query a single item or items from MongoDB. We concluded this installment by updating the Users module to take advantage of MongoDB. In this installment, we will add and populate a new taskDB collection named tasks. Next, we will update the Mongo module with functions that create and update a document in a collection. Finally, we will integrate the existing and new MongoDB functionality with the existing Task API routes. As with previous installments, the sample code and files for this installment can be downloaded from [GitHub](https://github.com/trider/node-task-api-tutorial/tree/main/node-task-api-part-02). 
+In [Part Five](https://www.linkedin.com/pulse/node-js-express-frontend-developers-part-five-managing-jonathan-gold-xkq2f/?trackingId=IIFGsJ%2BmSD6b4EpWCf5eZQ%3D%3D) of this series, we integrated the User API with MongoDB. We started by installing MongoDB, creating a database, and populating the users collection. Next, we created a Mongo module that enabled us to query a single item or items from MongoDB. We concluded this installment by updating the Users module to take advantage of MongoDB. In this installment, we will add and populate a new taskDB collection named tasks. Next, we will update the Mongo module with functions that create and update a document in a collection. Finally, we will integrate the existing and new MongoDB functionality with the existing Task API routes. As with previous installments, the sample code and files for this installment can be downloaded from [GitHub](https://github.com/trider/node-task-api-tutorial/tree/main/node-task-api-part-02).
 
 ## **Creating and Populating the Tasks Collection**
 
@@ -76,22 +76,25 @@ In this section, we will update the Mongo module with functions that create and 
 
 Open api/modules/mongo.js. Following the getItems function, add a comma. Copy and paste the getItem function. Rename the function to writeItem. As the name suggests, the function will add a new document to a collection. The function uses the Mongo API’s writeOne method to create a new document in a collection. The method receives the data with which to create the object. Remove the middle section of the function and replace it with the following.
 
-`const resp = await data.insertOne(args.data).then(res => {`  
-  `return res`  
-`}).catch(error => {`  
-   `return {status:error}`  
-`});`
-creates a new object if the target object does not exist.
+```javascript
+const resp = await data.insertOne(args.data).then(res => {
+  return res
+}).catch(error => {
+   return {status:error}
+});
+```
 
 Now we will add a function that updates an existing document in a collection. The function uses the updateOne method to update a single document in a collection. The method receives a query and two additional parameters. The $set parameter receives the data with which to update the object. The upsert parameter, if set to true, creates a new object if the target object does not exist. Following writeItem, add a comma. Copy and paste the getItem function. Remove the middle section of the function and replace it with the following.
 
-`const resp = await data.updateOne(`  
-  `args.query, { $set: args.data }, { upsert: true }`      
-`).then(res => {`  
-  `return res`  
-`}).catch(error => {`  
-  `return {status:error}`  
- `});`
+```javascript
+const resp = await data.updateOne(
+  args.query, { $set: args.data }, { upsert: true }    
+).then(res => {
+  return res
+}).catch(error => {
+  return {status:error}
+});
+```
 
 ### **Updating the Task API Routes**
 
@@ -99,92 +102,106 @@ With our two new Mongo API functions in place, we will now update the three task
 
 First, locate the POST /add route and replace the existing code with the following:
 
-`router.post('/add', (req, res) => {`  
-  `let tasks = null`  
-     `let taskId = null`  
-     `const getData = new Promise((resolve) => {`  
-       `mongoAPI.getItems({ db: 'tasksDB', collection: 'tasks', query: {} }`  
-       `).then((data, err) => resolve(data))`
+```javascript
+router.post('/add', (req, res) => {
+  let tasks = null
+     let taskId = null
+     const getData = new Promise((resolve) => {
+       mongoAPI.getItems({ db: 'tasksDB', collection: 'tasks', query: {} }
+       ).then((data, err) => resolve(data))
 
-     `}).then((data) => {`  
-       `tasks = data`  
-       `taskId = tasks.length + 1`  
-       `return mongoAPI.writeItem({`  
-         `db: 'tasksDB',`  
-         `collection: 'tasks',`  
-         `data: {`  
-           `...req.body,`  
-           `taskId: taskId,`  
-           `added: new Date(),`  
-           `updated: new Date(),`  
-           `isActive: true`
 
-         `}`  
-       `})`  
-     `}).then((data) => {`  
-       `return mongoAPI.getItem({db:'tasksDB',collection:'tasks',query:{"taskId":taskId}})`  
-     `}).then((data) => {`  
-        `return res.json(data)`  
-     `})`  
-     `return getData.then(data => data).catch((err) => {`  
-       `console.log(err)`  
-     `})`  
- `});`
+     }).then((data) => {
+       tasks = data
+       taskId = tasks.length + 1
+       return mongoAPI.writeItem({
+         db: 'tasksDB',
+         collection: 'tasks',
+         data: {
+           ...req.body,
+           taskId: taskId,
+           added: new Date(),
+           updated: new Date(),
+           isActive: true
+
+
+         }
+       })
+     }).then((data) => {
+       return mongoAPI.getItem({db:'tasksDB',collection:'tasks',query:{"taskId":taskId}})
+     }).then((data) => {
+        return res.json(data)
+     })
+     return getData.then(data => data).catch((err) => {
+       console.log(err)
+     })
+ });
+```
 
 The updated function accepts the same payload as the previous version of the function. In order to generate a unique taskId, the first section of the function’s promise queries the tasks collection to determine the current size of the collection. The second section creates a new taskId by incrementing the current number of tasks by one. In the next section, the Mongo API’s writeItem method is used to add a new document to the tasks collection. The method’s payload includes the target database, collection, and data. The data object includes the received payload, a taskId, two date fields (added and updated), and an isActive flag. The third section retrieves the new tasks from the collection by its taskId. This last section returns the results of the query as a JSON object.
 
 Next, locate the PUT /update/:taskId route and replace it with the following code.
 
-`router.post('/update/:taskId', (req, res) => {`  
-  `const getData = new Promise((resolve) => {`  
-     `mongoAPI.updateItem({`   
-       `db: 'tasksDB',`   
-       `collection: 'tasks',`   
-       `query: { taskId: req.params.taskId },`   
-       `data: req.body`   
-     `}).then((data, err) => resolve(data))`  
-   `}).then((data) => {`  
-    `return mongoAPI.getItem({`  
-     `db:'tasksDB',collection: 'tasks',query:{ taskId:req.params.taskId }`  
-    `})`  
-   `}).then((data) => {`  
-     `return res.json(data)`  
-   `})`  
-   `return getData.then(data => data).catch((err) => console.log(err))`  
-`});`
+```javascript
+router.post('/update/:taskId', (req, res) => {
+  const getData = new Promise((resolve) => {
+     mongoAPI.updateItem({ 
+       db: 'tasksDB', 
+       collection: 'tasks', 
+       query: { taskId: req.params.taskId }, 
+       data: req.body 
+     }).then((data, err) => resolve(data))
+   }).then((data) => {
+    return mongoAPI.getItem({
+     db:'tasksDB',collection: 'tasks',query:{ taskId:req.params.taskId }
+    })
+   }).then((data) => {
+     return res.json(data)
+   })
+   return getData.then(data => data).catch((err) => console.log(err))
+});
+```
 
 Here we don’t need to generate a taskId, so we can start with the relevant Mongo API (updateItem) method. In order to locate the target task document, the method includes a query. In this case, we locate the task using the route’s taskId parameter. The method data receives the route’s payload and sends it to the database. The next section queries the tasks collection and returns the updated task document. The final section returns the query as a JSON object.
 
 The last route to update is DELETE /task/:taskID. Locate the route and replace it with the following code.
 
-`router.post('/delete', (req, res) => {`  
- `const getData = new Promise((resolve) => {`  
-   `mongoAPI.updateItem(`  
-     `{`  
-       `db: 'tasksDB',`  
-       `collection: 'tasks',`  
-       `query: { "taskId": req.body.taskId },`  
-       `data: {`  
-         `isActive: false,`  
-         `updated: new Date()`  
-       `}`  
-     `}`  
-   `).then((data, err) => resolve(data))`  
- `}).then((data) => {`  
-   `console.log(data.result)`  
-   `return mongoAPI.getItem(`  
-     `{ db: 'tasksDB', collection: 'tasks', query: { "taskId": parseInt(req.body.taskId)} }`  
-   `)`  
- `}).then((data) => {`
+```javascript
+router.post('/delete', (req, res) => {
+ const getData = new Promise((resolve) => {
+   mongoAPI.updateItem({
+       db: 'tasksDB',
+       collection: 'tasks',
+       query: { "taskId": req.body.taskId },
+       data: {
+         isActive: false,
+         updated: new Date()
+      }
+ }).then((data, err) => resolve(data))
+ }).then((data) => {
+   console.log(data.result)
+   return mongoAPI.getItem(
+     { db: 'tasksDB', collection: 'tasks', query: { "taskId": parseInt(req.body.taskId)} }
+   )
+ }).then((data) => {
+   return res.json(data)
+ })
+ return getData.then(data => data).catch((err) => {
+   console.log(err)
+ })
+});
+```
 
-   `return res.json(data)`  
- `})`  
- `return getData.then(data => data).catch((err) => {`  
-   `console.log(err)`  
- `})`  
-`});`
+Note that the code doesn’t delete the task from the database’s tasks collection. This is because there may be cases that you want to reinstate a task, but do not want to show a shorter tasks list. It also simplifies our MongoAPI module because we no longer need to implement this function nationality. Now we can use the updateItem method instead. So, to delete a task we mark the task as inactive (isActive:false). This explains the existence of the isActive flag. Another thing to be aware of is that this route uses a payload instead of a parameter. This means that when you want to use this route, you must uses the following path and payload.
 
-Note that the code doesn’t delete the task from the database’s tasks collection. This is because there may be cases that you want to reinstate a task, but do not want to show a shorter tasks list. It also simplifies our MongoAPI module because we no longer need to implement this function nationality. Now we can use the updateItem method instead. So, to delete a task we mark the task as inactive (isActive:false). This explains the existence of the isActive flag.
+```javascript
+POST /delete
+
+{
+    "taskId":4
+}
+
+```
 
 ## **Conclusion and Next Steps**
 
