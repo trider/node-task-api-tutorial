@@ -1,0 +1,83 @@
+[{
+  "_id": {
+    "$oid": "6630ab326e723ac1ea6dce7a"
+  },
+  "description": "A new task description",
+  "name": "A New Task",
+  "taskId": 1,
+  "user": "jonnygold",
+  "added": {
+    "$date": "2024-05-01T22:00:00.000Z"
+  },
+  "updated": {
+    "$date": "2024-09-03T14:22:15.564Z"
+  },
+  "status": "do",
+  "isActive": false
+},
+{
+  "_id": {
+    "$oid": "6630fe5d6e723ac1ea6dce7e"
+  },
+  "description": "My second task",
+  "name": "Another task",
+  "taskId": {
+    "$numberLong": "2"
+  },
+  "user": "jonnygold",
+  "added": {
+    "$date": "2024-05-01T22:00:00.000Z"
+  },
+  "updated": {
+    "$date": "2024-06-14T15:40:20.983Z"
+  },
+  "status": "doing",
+  "isActive": true
+},
+{
+  "_id": {
+    "$oid": "66716441d6e46f91d2d92aed"
+  },
+  "name": "Old Task",
+  "description": "My new task description updated",
+  "user": "jonnygold",
+  "added": "2024-08-18T13:59:39.963Z",
+  "updated": {
+    "$date": "2024-08-18T16:59:39.968Z"
+  },
+  "status": "done",
+  "taskId": 3,
+  "isActive": true
+},
+{
+  "_id": {
+    "$oid": "66d813cd62335fab6ad004bb"
+  },
+  "name": "A New Task",
+  "description": "A new task description",
+  "user": "jonnygold",
+  "taskId": 4,
+  "added": {
+    "$date": "2024-09-04T08:01:17.094Z"
+  },
+  "updated": {
+    "$date": "2024-09-04T08:01:17.094Z"
+  },
+  "isActive": true
+},
+{
+  "_id": {
+    "$oid": "66d81622a7017146c2b64958"
+  },
+  "name": "A New Task",
+  "description": "A new task description",
+  "user": "jonnygold",
+  "taskId": 5,
+  "added": {
+    "$date": "2024-09-04T08:11:14.522Z"
+  },
+  "updated": {
+    "$date": "2024-09-04T08:11:14.522Z"
+  },
+  "isActive": true
+}]

@@ -248,138 +248,215 @@
 					"name": "post",
 					"item": [
 						{
-							"name": "add",
-							"request": {
-								"method": "POST",
-								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"description\": \"My task\",\n  \"name\": \"task\",\n  \"taskId\": 6,\n  \"user\": \"jonnygold\",\n  \"added\": \"2024-05-01T22:00:00.000Z\",\n  \"updated\": \"2024-05-01T14:16:01.119Z\",\n  \"status\": \"done\",\n  \"isActive\": true,\n  \"isEdit\": false\n}",
-									"options": {
-										"raw": {
-											"language": "json"
+							"name": "legacy",
+							"item": [
+								{
+									"name": "add",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"description\": \"My task\",\n  \"name\": \"task\",\n  \"taskId\": 6,\n  \"user\": \"jonnygold\",\n  \"added\": \"2024-05-01T22:00:00.000Z\",\n  \"updated\": \"2024-05-01T14:16:01.119Z\",\n  \"status\": \"done\",\n  \"isActive\": true,\n  \"isEdit\": false\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://0.0.0.0:3000/api/tasks/add",
+											"protocol": "http",
+											"host": [
+												"0",
+												"0",
+												"0",
+												"0"
+											],
+											"port": "3000",
+											"path": [
+												"api",
+												"tasks",
+												"add"
+											]
 										}
-									}
+									},
+									"response": []
 								},
-								"url": {
-									"raw": "http://0.0.0.0:3000/api/tasks/add",
-									"protocol": "http",
-									"host": [
-										"0",
-										"0",
-										"0",
-										"0"
-									],
-									"port": "3000",
-									"path": [
-										"api",
-										"tasks",
-										"add"
-									]
+								{
+									"name": "update",
+									"request": {
+										"method": "PUT",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": \"6630fe826e723ac1ea6dce7f\",\n  \"description\": \"My task\",\n  \"name\": \"new task\",\n  \"taskId\": 3,\n  \"user\": \"jonnygold\",\n  \"added\": \"2024-05-01T22:00:00.000Z\",\n  \"updated\": \"2024-05-01T14:16:01.119Z\",\n  \"status\": \"done\",\n  \"isActive\": true,\n  \"isEdit\": false\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://0.0.0.0:3000/api/tasks/update/3",
+											"protocol": "http",
+											"host": [
+												"0",
+												"0",
+												"0",
+												"0"
+											],
+											"port": "3000",
+											"path": [
+												"api",
+												"tasks",
+												"update",
+												"3"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "delete",
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://0.0.0.0:3000/api/tasks/delete/4",
+											"protocol": "http",
+											"host": [
+												"0",
+												"0",
+												"0",
+												"0"
+											],
+											"port": "3000",
+											"path": [
+												"api",
+												"tasks",
+												"delete",
+												"4"
+											]
+										}
+									},
+									"response": []
 								}
-							},
-							"response": []
+							]
 						},
 						{
-							"name": "update",
-							"request": {
-								"method": "PUT",
-								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"id\": \"6630fe826e723ac1ea6dce7f\",\n  \"description\": \"My task\",\n  \"name\": \"new task\",\n  \"taskId\": 3,\n  \"user\": \"jonnygold\",\n  \"added\": \"2024-05-01T22:00:00.000Z\",\n  \"updated\": \"2024-05-01T14:16:01.119Z\",\n  \"status\": \"done\",\n  \"isActive\": true,\n  \"isEdit\": false\n}",
-									"options": {
-										"raw": {
-											"language": "json"
+							"name": "mongo",
+							"item": [
+								{
+									"name": "add",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"description\": \"My task\",\n  \"name\": \"task\",\n  \"taskId\": 6,\n  \"user\": \"jonnygold\",\n  \"added\": \"2024-05-01T22:00:00.000Z\",\n  \"updated\": \"2024-05-01T14:16:01.119Z\",\n  \"status\": \"done\",\n  \"isActive\": true,\n  \"isEdit\": false\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://0.0.0.0:3000/api/tasks/add",
+											"protocol": "http",
+											"host": [
+												"0",
+												"0",
+												"0",
+												"0"
+											],
+											"port": "3000",
+											"path": [
+												"api",
+												"tasks",
+												"add"
+											]
 										}
-									}
+									},
+									"response": []
 								},
-								"url": {
-									"raw": "http://0.0.0.0:3000/api/tasks/update/3",
-									"protocol": "http",
-									"host": [
-										"0",
-										"0",
-										"0",
-										"0"
-									],
-									"port": "3000",
-									"path": [
-										"api",
-										"tasks",
-										"update",
-										"3"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "delete (DB)",
-							"request": {
-								"method": "POST",
-								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"taskId\":4\n}\n",
-									"options": {
-										"raw": {
-											"language": "json"
+								{
+									"name": "update",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": \"6630fe826e723ac1ea6dce7f\",\n  \"description\": \"My task\",\n  \"name\": \"new task\",\n  \"taskId\": 3,\n  \"user\": \"jonnygold\",\n  \"added\": \"2024-05-01T22:00:00.000Z\",\n  \"updated\": \"2024-05-01T14:16:01.119Z\",\n  \"status\": \"done\",\n  \"isActive\": true,\n  \"isEdit\": false\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://0.0.0.0:3000/api/tasks/update/3",
+											"protocol": "http",
+											"host": [
+												"0",
+												"0",
+												"0",
+												"0"
+											],
+											"port": "3000",
+											"path": [
+												"api",
+												"tasks",
+												"update",
+												"3"
+											]
 										}
-									}
+									},
+									"response": []
 								},
-								"url": {
-									"raw": "http://0.0.0.0:3000/api/tasks/delete",
-									"protocol": "http",
-									"host": [
-										"0",
-										"0",
-										"0",
-										"0"
-									],
-									"port": "3000",
-									"path": [
-										"api",
-										"tasks",
-										"delete"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "delete (No DB)",
-							"request": {
-								"method": "DELETE",
-								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": "",
-									"options": {
-										"raw": {
-											"language": "json"
+								{
+									"name": "delete",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"taskId\":4\n}\n",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://0.0.0.0:3000/api/tasks/delete",
+											"protocol": "http",
+											"host": [
+												"0",
+												"0",
+												"0",
+												"0"
+											],
+											"port": "3000",
+											"path": [
+												"api",
+												"tasks",
+												"delete"
+											]
 										}
-									}
-								},
-								"url": {
-									"raw": "http://0.0.0.0:3000/api/tasks/delete/4",
-									"protocol": "http",
-									"host": [
-										"0",
-										"0",
-										"0",
-										"0"
-									],
-									"port": "3000",
-									"path": [
-										"api",
-										"tasks",
-										"delete",
-										"4"
-									]
+									},
+									"response": []
 								}
-							},
-							"response": []
+							]
 						}
 					]
 				}
