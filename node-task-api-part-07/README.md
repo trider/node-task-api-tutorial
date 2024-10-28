@@ -1,208 +1,213 @@
-# **Node JS Express for FrontEnd Developers Part Six: Task API Integration**
+# **Node JS Express for FrontEnd Developers Part Seven: Testing the API**
 
-In [Part Five](https://www.linkedin.com/pulse/node-js-express-frontend-developers-part-five-managing-jonathan-gold-xkq2f/?trackingId=IIFGsJ%2BmSD6b4EpWCf5eZQ%3D%3D) of this series, we integrated the User API with MongoDB. We started by installing MongoDB, creating a database, and populating the users collection. Next, we created a Mongo module that enabled us to query a single item or items from MongoDB. We concluded this installment by updating the Users module to take advantage of MongoDB. In this installment, we will add and populate a new taskDB collection named tasks. Next, we will update the Mongo module with functions that create and update a document in a collection. Finally, we will integrate the existing and new MongoDB functionality with the existing Task API routes. As with previous installments, the sample code and files for this installment can be downloaded from [GitHub](https://github.com/trider/node-task-api-tutorial/tree/main/node-task-api-part-02).
+In [Part Six](https://www.linkedin.com/pulse/node-js-express-frontend-developers-part-six-task-api-jonathan-gold-pi1jf/) of this series, we integrated the Tasks API with MongoDB. We created and populated tasksDB’s task collection. We updated the mongo.js module to create and update tasks. We integrated tasks.js with MongoDB. This enhanced our existing querying functionality and enabled us to persist, update, and delete tasks from the database. We implemented the delete functionality by declaring a task to be inactive or active. As a result, we can reinstate deleted tasks by not removing them from the database.
 
-## **Creating and Populating the Tasks Collection**
+In this installment, we will test our code. We will look at two different approaches. The first approach is to use an HTTP client application, such as Postman to test individual routes. The second approach is to write automated tests with a testing framework. As with previous installments, the sample code and files for this installment can be downloaded from [GitHub](https://github.com/trider/node-task-api-tutorial/tree/main/node-task-api-part-02).
 
-In the Connections list, open localhost:27017. Locate tasksDB and click the Plus icon.
+## **API Testing Using an HTTP Client**
 
-![collection](db_add_tasks.png)
+While Postman has been mentioned in [Part Two](https://www.linkedin.com/pulse/node-js-express-frontend-developers-part-two-building-jonathan-gold-tji3f/) and Part Six of this series, it’s a very useful tool and is worth spending a few minutes to reacquaint ourselves with it. Postman is an HTTP client application that lets us test REST API endpoints, such as our Task API routes. Postman lets you send everything from simple HTTP GET and DELETE requests to more complex requests that include a payload.
 
-With the Create Collection dialog, create the tasks collection.
+If you haven’t done so already, you can download Postman from this [link](https://www.postman.com/downloads/). Once you have downloaded Postman, you can import the latest version of the node-task-api collection from [Github](https://github.com/trider/node-task-api-tutorial/blob/main/node-task-api-part-07/node-task-api.postman_collection.json). This includes both the original (legacy) HTTP routes that use POST, PUT, and DELETE, and the newer routes from Parts Five and Six that use MongoDB and HTTP POST.
 
-![collection](db_create_collection.png)
+Launch Postman, and click the Import button. Note that the latest version of the collection includes an updated Tasks folder.
 
-From this [link](https://github.com/trider/node-task-api-tutorial/blob/main/node-task-api-part-06/api/collections/tasksDB.tasks.json), download the tasksDB.tasks.json file. After downloading the files, open a collection and click Add Data \> Import JSON or CSV file.
+![import](pm_import.png)
 
-![import](db_collection_import.png)
+Then, use the dialog to import the collection file.
 
-Then, in the File browser select the file.
+![import](pm_import_dialog.png)
 
-![import](db_import_file.png)
+After you have imported the collection, open any folder, select a route and press Send. A response is displayed in the Response window.
 
-## **Querying MongoDB Tasks**
+![import](pm_window_full.png)
 
-After we created and populated the tasks collection, we can proceed to update the tasks module’s query function. First, in the top section of the file, let’s add a reference to the MongoAPI module.
+## **Creating Automated Tests**
 
-```javascript
-const express = require('express');
-const router = express.Router();
-const mongoAPI = require('./mongo');
+HTTP client applications are great development tools but generally we use them to test individual routes one at a time. NodeJS, like many development environments, supports frameworks that let us automate application testing by writing code (scripts). This enables us to comprehensively test our code under a broad range of circumstances and using different inputs. We will now write automated test scripts that will enable us to test all of our existing routes.
+
+### **Installing Testing Frameworks**
+
+To test our Task Management API, we will use a popular Javascript testing framework called [Jest](https://jestjs.io/) in conjunction with another called [Supertest](https://www.npmjs.com/package/supertest). How and why we need these frameworks will be explained later. To install Jest, open the project folder and type:
+
+```bash
+npm install \--save-dev jest
 ```
 
-First, let’s update the GET /api/tasks/user/:user route. This route returns all the active tasks assigned to a user. To update the route, locate the /user/:user route, and replace the existing handler function code with the following.
+Next, we install Supertest
+
+```bash
+npm install \--save-dev supertest
+```
+
+The last step is to open package.json and add and/or update the scripts as follows.
 
 ```javascript
-router.get('/user/:user',  (req, res) =>{
-  const getData = new Promise((resolve) => {
-     mongoAPI.getItems(
-       { db: 'tasksDB', collection: 'tasks', query: { user: req.params.user, isActive:true } }
-     ).then((data, err) => resolve(data))
-   }).then((data) => {
-     return res.json(data)
+"scripts": {
+   "test": "jest"
+ },
+```
 
+This will enable us to run our tests by typing npm test.
 
-   })
-   return getData.then(data => data).catch((err) => console.log(err))
+### **Modifying our Application**
+
+Before we write our tests we need to make some minor modifications to our code. First open, index.js. Remove this code from the file.
+
+```javascript
+app.listen(3000, () => {
+ console.log('Server is running on port 3000');
 });
 ```
 
-The code is almost identical to the GET /api/users/:user route we created in Part Four with minor details in the query. The first change is that instead of querying the users collection, the function queries the tasks collection. In addition, the query matches the values of two fields: user and isActive. The user field indicates the user to which the task was assigned. The isActive field is a boolean value (true or false) that indicates if the task is currently active. The significance of isActive will be explained later.
-
-Now, let’s update the GET /api/tasks/task/:taskId route. This route returns a single task identified by its taskId. Locate the route, and replace the existing code with the following.
+At the bottom of the file, enable the export functionality with this code. This will enable our test code to access the API routes.
 
 ```javascript
-router.get('/task/:taskId',  (req, res) =>{
-  const getData = new Promise((resolve) => {
-     mongoAPI.getItem(
-       { db: 'tasksDB', collection: 'tasks', query: { taskId:parseInt(req.params.taskId)} }
-     ).then((data, err) => resolve(data))
-   }).then((data) => {
-     return res.json(data)
+module.exports = app;
+```
 
+Now, in this folder, make a new file called index-server.js. Paste the following code into the file.
 
-   })
-   return getData.then(data => data).catch((err) => console.log(err))
+```javascript
+const app = require('./index');
+
+app.listen(3000, () => {
+ console.log('Server is running on port 3000');
 });
 ```
 
-Again the new code looks familiar but has one minor difference. As with the original code, we have to convert the route's taskId parameter from a string  and the taskId is an integer. In this case, we have to convert the parameter’s data type because MongoDB stores the taskId as an integer. As with the previous version of the function, we use Javascript’s parseInt command to convert it into an integer.
+From now on, you will launch the API by typing node index-server.js. This will enable us to run the API and tests in parallel. Otherwise, when we wanted to run tests we would need to stop the API and vice versa. In addition, by splitting index.js functionality across two files, we can also split our test code across multiple files.
 
-## **Managing Tasks**
+### **Writing Tests**
 
-In this section, we will update the Mongo module with functions that create and update a document in a collection. To do this, we will first update the mongo.js module and then we will update tasks.js.
+In the api folder, add a new folder called test. In the folder, create a file called api.test.js. The .test indicates to Jest that this file contains runnable tests.
 
-### **Updating the MongoAPI Module**
+![import](test_folder.png)
 
-Open api/modules/mongo.js. Following the getItems function, add a comma. Copy and paste the getItem function. Rename the function to writeItem. As the name suggests, the function will add a new document to a collection. The function uses the Mongo API’s writeOne method to create a new document in a collection. The method receives the data with which to create the object. Remove the middle section of the function and replace it with the following.
+Open api.test.js, and add the following. Where request references the supertest framework, and app references the app object declared in index.js. Note that we do not have to reference Jest as supertest takes care of that for us.
 
 ```javascript
-const resp = await data.insertOne(args.data).then(res => {
-  return res
-}).catch(error => {
-   return {status:error}
+const request = require("supertest");
+const app = require("../../index");
+```
+
+Let's start by creating a Jest specification. The specification is a block that describes what the test will do. Here, we want to check that the GET /api/users endpoint returns a list of users.
+
+```javascript
+describe("GET /api/users", () => {});
+```
+
+The specification contains one or more tests that test specific functionality. Individual tests are declared with the it keyword. This has a description followed by a testing function. Since our test will call an asynchronous route, it is preceded by the async keyword.
+
+```javascript
+describe("GET /api/users", () => {
+   it("It returns a list of users", async () => {});
 });
 ```
 
-Now we will add a function that updates an existing document in a collection. The function uses the updateOne method to update a single document in a collection. The method receives a query and two additional parameters. The $set parameter receives the data with which to update the object. The upsert parameter, if set to true, creates a new object if the target object does not exist. Following writeItem, add a comma. Copy and paste the getItem function. Remove the middle section of the function and replace it with the following.
+Now we declare a response object to reference a supertest request method. Here we use the get method to access the route. Since each route is called asynchronously, it must be preceded by the await keyword.
 
 ```javascript
-const resp = await data.updateOne(
-  args.query, { $set: args.data }, { upsert: true }    
-).then(res => {
-  return res
-}).catch(error => {
-  return {status:error}
-});
-```
-
-### **Updating the Task API Routes**
-
-With our two new Mongo API functions in place, we will now update the three task management routes in /api/modules/tasks. Note that to simplify our application code, all the new functions use the HTTP POST command.
-
-First, locate the POST /add route and replace the existing code with the following:
-
-```javascript
-router.post('/add', (req, res) => {
-  let tasks = null
-     let taskId = null
-     const getData = new Promise((resolve) => {
-       mongoAPI.getItems({ db: 'tasksDB', collection: 'tasks', query: {} }
-       ).then((data, err) => resolve(data))
-
-
-     }).then((data) => {
-       tasks = data
-       taskId = tasks.length + 1
-       return mongoAPI.writeItem({
-         db: 'tasksDB',
-         collection: 'tasks',
-         data: {
-           ...req.body,
-           taskId: taskId,
-           added: new Date(),
-           updated: new Date(),
-           isActive: true
-
-
-         }
-       })
-     }).then((data) => {
-       return mongoAPI.getItem({db:'tasksDB',collection:'tasks',query:{"taskId":taskId}})
-     }).then((data) => {
-        return res.json(data)
-     })
-     return getData.then(data => data).catch((err) => {
-       console.log(err)
-     })
+describe("GET /api/users", () => {
+   it("It returns a list of users", async () => {
+     const response = await request(app).get("/api/users");
+   });
  });
 ```
 
-The updated function accepts the same payload as the previous version of the function. In order to generate a unique taskId, the first section of the function’s promise queries the tasks collection to determine the current size of the collection. The second section creates a new taskId by incrementing the current number of tasks by one. In the next section, the Mongo API’s writeItem method is used to add a new document to the tasks collection. The method’s payload includes the target database, collection, and data. The data object includes the received payload, a taskId, two date fields (added and updated), and an isActive flag. The third section retrieves the new tasks from the collection by its taskId. This last section returns the results of the query as a JSON object.
-
-Next, locate the PUT /update/:taskId route and replace it with the following code.
+When a response is returned we can evaluate the expected result as shown below. Here, the test evaluates that the response returns the HTTP 200 status code (OK). The test also checks that the response body exists (toBeTruthy). Lastly, it checks that the list of users is not empty.
 
 ```javascript
-router.post('/update/:taskId', (req, res) => {
-  const getData = new Promise((resolve) => {
-     mongoAPI.updateItem({ 
-       db: 'tasksDB', 
-       collection: 'tasks', 
-       query: { taskId: req.params.taskId }, 
-       data: req.body 
-     }).then((data, err) => resolve(data))
-   }).then((data) => {
-    return mongoAPI.getItem({
-     db:'tasksDB',collection: 'tasks',query:{ taskId:req.params.taskId }
-    })
-   }).then((data) => {
-     return res.json(data)
-   })
-   return getData.then(data => data).catch((err) => console.log(err))
+describe("GET /api/users", () => {
+   it("It returns a list of users", async () => {
+     const response = await request(app).get("/api/users");
+     expect(response.statusCode).toBe(200);
+     expect(response.body).toBeTruthy();
+     expect(response.body.length).toBeGreaterThan(0);
+   });
 });
 ```
 
-Here we don’t need to generate a taskId, so we can start with the relevant Mongo API (updateItem) method. In order to locate the target task document, the method includes a query. In this case, we locate the task using the route’s taskId parameter. The method data receives the route’s payload and sends it to the database. The next section queries the tasks collection and returns the updated task document. The final section returns the query as a JSON object.
+In your IDE’s integrated terminal, run the test by typing
 
-The last route to update is DELETE /task/:taskID. Locate the route and replace it with the following code.
+npm test
+
+You should see that our test ran and passed:
+
+![result](test_result.png)
+
+Having written one test that tests one user API function. Let’s test the rest. Before we do, let’s group our existing user tests in a single block as follows:
 
 ```javascript
-router.post('/delete', (req, res) => {
- const getData = new Promise((resolve) => {
-   mongoAPI.updateItem({
-       db: 'tasksDB',
-       collection: 'tasks',
-       query: { "taskId": req.body.taskId },
-       data: {
-         isActive: false,
-         updated: new Date()
-      }
- }).then((data, err) => resolve(data))
- }).then((data) => {
-   console.log(data.result)
-   return mongoAPI.getItem(
-     { db: 'tasksDB', collection: 'tasks', query: { "taskId": parseInt(req.body.taskId)} }
-   )
- }).then((data) => {
-   return res.json(data)
- })
- return getData.then(data => data).catch((err) => {
-   console.log(err)
- })
+describe("User tests", () => {
+ describe("GET /api/users", () => {
+   it("It returns a list of users", async () => {
+     const response = await request(app).get("/api/users");
+     expect(response.statusCode).toBe(200);
+     expect(response.body).toBeTruthy();
+     expect(response.body.length).toBeGreaterThan(0);
+   });
+  });
 });
 ```
 
-Note that the code doesn’t delete the task from the database’s tasks collection. This is because there may be cases that you want to reinstate a task, but do not want to show a shorter tasks list. It also simplifies our MongoAPI module because we no longer need to implement this function nationality. Now we can use the updateItem method instead. So, to delete a task we mark the task as inactive (isActive:false). This explains the existence of the isActive flag. Another thing to be aware of is that this route uses a payload instead of a parameter. This means that when you want to use this route, you must uses the following path and payload.
+Now let’s add a test that evaluates the GET /api/users/:user endpoint by adding the following:
 
 ```javascript
-POST /delete
-
-{
-    "taskId":4
-}
-
+describe("GET /api/users/jonnygold", () => {
+   it("It returns a user", async () => {
+     const response = await request(app).get("/api/users/jonnygold");
+     expect(response.statusCode).toBe(200);
+     expect(response.body).toBeTruthy();
+   });
+   it("It returns a user with the expected username", async () => {
+     const response = await request(app).get("/api/users/jonnygold");
+     expect(response.body.userName).toBe("jonnygold");
+   });
+   it("It returns a user with the expected email", async () => {
+     const response = await request(app).get("/api/users/jonnygold");
+     expect(response.body.email).toBe("jonnygold@gmail.com");
+   });
+ });
+});
 ```
+
+Here there are three individual tests. The first test performs a sanity check by evaluating basic functionality. The second and third attributes evaluate the userName and email field values included in the response object. When you run the test, it returns the following response that is organized according to our description blocks.
+
+![result 2](test_result_2.png)
+
+Let’s complete the user tests, by testing POST /api/users/login. Here, we will create two tests. The first test evaluates that the api authenticates a user that login with valid credentials. The second test handles invalid credentials. Each test uses the post method to send a HTTP post command and a send method to handle the payload.
+
+```javascript
+describe("POST /api/users/login", () => {
+   it("It authenticates a user when supplied with the correct credentials", async () => {
+     const response = await request(app).post("/api/users/login").send({
+       userName: "jonnygold",
+       password: "1234",
+     });
+     expect(response.statusCode).toBe(200);
+     expect(response.body).toBeTruthy();
+     expect(response.body.isAuthenticated).toBe(true);
+     expect(response.body.status).toBe("User found");
+   });
+
+   it("It does not authenticate a user when supplied with the incorrect credentials", async () => {
+     const response = await request(app).post("/api/users/login").send({
+       userName: "jonnygold",
+       password: "12345",
+     });
+     expect(response.statusCode).toBe(200);
+     expect(response.body).toBeTruthy();
+     expect(response.body.isAuthenticated).toBe(false);
+     expect(response.body.status).toBe("User not found");
+   });
+ });
+```
+
+To complete our test set, let’s add a block of task route tests. As these use similar logic to the user tests, we don’t need to describe what they do or how they work. Running the tests produces the following result.
+
+![result all](test_result_all.png)
 
 ## **Conclusion and Next Steps**
 
-In this installment, we created and populated tasksDB’s task collection. We updated the mongo.js module to create and update tasks. We integrated tasks.js with MongoDB. This enhanced our existing querying functionality and enabled us to persist, update, and delete tasks from the database. We implemented the delete functionality by declaring a task to be inactive or active. As a result, we can reinstate deleted tasks by not removing them from the database. In the next installment, we will look at how we can test our code. On the subject of testing, I have updated the Postman collection to include all API routes and support the latest functionality. You can download it from GitHub with this [link](https://github.com/trider/node-task-api-tutorial/blob/main/node-task-api-part-06/node-task-api.postman_collection.json).
+In this installment, we will investigate two testing approaches. The first approach used Postman as an HTTP client application to send data to individual routes. The second approach used the Jest and Supertest frameworks to write automated test scripts. Now we have a fully functional Task Management API that receives data and is able to query, persist, and modify that data using a database. We also have a complete test suite that tests all available API routes. All we are missing is documentation that demonstrates our API and shows us how to use it. This will be covered in the next, and final part of this series where we will use Swagger to document our code.
