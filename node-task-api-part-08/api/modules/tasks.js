@@ -240,7 +240,7 @@ router.post('/add', (req, res) => {
 router.post('/update/:taskId', (req, res) => {
    const getData = new Promise((resolve) => {
       mongoAPI.updateItem(
-        { db: 'tasksDB', collection: 'tasks', query: { taskId: req.params.taskId }, data: req.body }
+        { db: 'tasksDB', collection: 'tasks', query: { taskId: parseInt(req.params.taskId)  }, data: req.body }
       ).then((data, err) => resolve(data))
     }).then((data) => {
 

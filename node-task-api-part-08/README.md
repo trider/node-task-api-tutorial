@@ -1,208 +1,453 @@
-# **Node JS Express for FrontEnd Developers Part Six: Task API Integration**
+# **Node JS Express for FrontEnd Developers Part Eight: Documenting the API with Swagger**
 
-In [Part Five](https://www.linkedin.com/pulse/node-js-express-frontend-developers-part-five-managing-jonathan-gold-xkq2f/?trackingId=IIFGsJ%2BmSD6b4EpWCf5eZQ%3D%3D) of this series, we integrated the User API with MongoDB. We started by installing MongoDB, creating a database, and populating the users collection. Next, we created a Mongo module that enabled us to query a single item or items from MongoDB. We concluded this installment by updating the Users module to take advantage of MongoDB. In this installment, we will add and populate a new taskDB collection named tasks. Next, we will update the Mongo module with functions that create and update a document in a collection. Finally, we will integrate the existing and new MongoDB functionality with the existing Task API routes. As with previous installments, the sample code and files for this installment can be downloaded from [GitHub](https://github.com/trider/node-task-api-tutorial/tree/main/node-task-api-part-02).
+In [Part Seven](https://www.linkedin.com/pulse/node-js-express-frontend-developers-part-seven-testing-jonathan-gold-cpyif/) of this series, we investigated two testing approaches. The first approach used Postman as an HTTP client application to send data to individual routes. The second approach used the Jest and Supertest frameworks to write automated test scripts. Now we have a fully functional Task Management API that receives data and is able to query, persist, and modify that data using a database. We also have a complete test suite that tests all available API routes. All we are missing is documentation that demonstrates our API and shows us how to use it. In the final installment in this series, we will use Swagger to document our code. 
 
-## **Creating and Populating the Tasks Collection**
+[Swagger](https://swagger.io/) is a set of tools for designing, building, and documenting APIs. Swagger automatically generates interactive, user-friendly documentation for APIs, making it easier for developers to understand and test API endpoints. We will use swagger to generate a web page that displays all the Task API routes, organized by type (users, tasks), and lets you run sample code.
 
-In the Connections list, open localhost:27017. Locate tasksDB and click the Plus icon.
+As with previous installments, the sample code and files for this installment can be downloaded from [GitHub](https://github.com/trider/node-task-api-tutorial/tree/main/node-task-api-part-02).
 
-![collection](db_add_tasks.png)
+## **Installing Swagger**
 
-With the Create Collection dialog, create the tasks collection.
+Installing Swagger involves installing two NPM packages. First, you install Swagger Jsdoc. This package reads Swagger annotated source code and generates a Swagger specification. To install the package, type the following in your IDE’s integrated terminal:
 
-![collection](db_create_collection.png)
-
-From this [link](https://github.com/trider/node-task-api-tutorial/blob/main/node-task-api-part-06/api/collections/tasksDB.tasks.json), download the tasksDB.tasks.json file. After downloading the files, open a collection and click Add Data \> Import JSON or CSV file.
-
-![import](db_collection_import.png)
-
-Then, in the File browser select the file.
-
-![import](db_import_file.png)
-
-## **Querying MongoDB Tasks**
-
-After we created and populated the tasks collection, we can proceed to update the tasks module’s query function. First, in the top section of the file, let’s add a reference to the MongoAPI module.
-
-```javascript
-const express = require('express');
-const router = express.Router();
-const mongoAPI = require('./mongo');
+```bash
+npm i swagger-jsdoc
 ```
 
-First, let’s update the GET /api/tasks/user/:user route. This route returns all the active tasks assigned to a user. To update the route, locate the /user/:user route, and replace the existing handler function code with the following.
+The second package is Swagger UI Express. This package allows you to serve auto-generated swagger-ui generated API docs from express, based on a swagger.json file. The result is a web page that acts as live documentation for your API hosted from your API server via a route. To install the package, type the following in your IDE’s integrated terminal:
 
-```javascript
-router.get('/user/:user',  (req, res) =>{
-  const getData = new Promise((resolve) => {
-     mongoAPI.getItems(
-       { db: 'tasksDB', collection: 'tasks', query: { user: req.params.user, isActive:true } }
-     ).then((data, err) => resolve(data))
-   }).then((data) => {
-     return res.json(data)
-
-
-   })
-   return getData.then(data => data).catch((err) => console.log(err))
-});
+```bash
+npm i swagger-ui-express
 ```
 
-The code is almost identical to the GET /api/users/:user route we created in Part Four with minor details in the query. The first change is that instead of querying the users collection, the function queries the tasks collection. In addition, the query matches the values of two fields: user and isActive. The user field indicates the user to which the task was assigned. The isActive field is a boolean value (true or false) that indicates if the task is currently active. The significance of isActive will be explained later.
+## **Configuring Swagger**
 
-Now, let’s update the GET /api/tasks/task/:taskId route. This route returns a single task identified by its taskId. Locate the route, and replace the existing code with the following.
-
-```javascript
-router.get('/task/:taskId',  (req, res) =>{
-  const getData = new Promise((resolve) => {
-     mongoAPI.getItem(
-       { db: 'tasksDB', collection: 'tasks', query: { taskId:parseInt(req.params.taskId)} }
-     ).then((data, err) => resolve(data))
-   }).then((data) => {
-     return res.json(data)
-
-
-   })
-   return getData.then(data => data).catch((err) => console.log(err))
-});
-```
-
-Again the new code looks familiar but has one minor difference. As with the original code, we have to convert the route's taskId parameter from a string  and the taskId is an integer. In this case, we have to convert the parameter’s data type because MongoDB stores the taskId as an integer. As with the previous version of the function, we use Javascript’s parseInt command to convert it into an integer.
-
-## **Managing Tasks**
-
-In this section, we will update the Mongo module with functions that create and update a document in a collection. To do this, we will first update the mongo.js module and then we will update tasks.js.
-
-### **Updating the MongoAPI Module**
-
-Open api/modules/mongo.js. Following the getItems function, add a comma. Copy and paste the getItem function. Rename the function to writeItem. As the name suggests, the function will add a new document to a collection. The function uses the Mongo API’s writeOne method to create a new document in a collection. The method receives the data with which to create the object. Remove the middle section of the function and replace it with the following.
+Open index.js. At the top of the file, declare a variable that references Swagger UI Express.
 
 ```javascript
-const resp = await data.insertOne(args.data).then(res => {
-  return res
-}).catch(error => {
-   return {status:error}
-});
+const swaggerUi = require('swagger-ui-express');
 ```
 
-Now we will add a function that updates an existing document in a collection. The function uses the updateOne method to update a single document in a collection. The method receives a query and two additional parameters. The $set parameter receives the data with which to update the object. The upsert parameter, if set to true, creates a new object if the target object does not exist. Following writeItem, add a comma. Copy and paste the getItem function. Remove the middle section of the function and replace it with the following.
+Next, declare a variable that references Swagger Jsdoc
 
 ```javascript
-const resp = await data.updateOne(
-  args.query, { $set: args.data }, { upsert: true }    
-).then(res => {
-  return res
-}).catch(error => {
-  return {status:error}
-});
+const swaggerJsdoc = require('swagger-jsdoc');
 ```
 
-### **Updating the Task API Routes**
-
-With our two new Mongo API functions in place, we will now update the three task management routes in /api/modules/tasks. Note that to simplify our application code, all the new functions use the HTTP POST command.
-
-First, locate the POST /add route and replace the existing code with the following:
+Following the variables, declare the Swagger options. These include the openapi version, descriptive information, servers, and referenced API files.
 
 ```javascript
-router.post('/add', (req, res) => {
-  let tasks = null
-     let taskId = null
-     const getData = new Promise((resolve) => {
-       mongoAPI.getItems({ db: 'tasksDB', collection: 'tasks', query: {} }
-       ).then((data, err) => resolve(data))
-
-
-     }).then((data) => {
-       tasks = data
-       taskId = tasks.length + 1
-       return mongoAPI.writeItem({
-         db: 'tasksDB',
-         collection: 'tasks',
-         data: {
-           ...req.body,
-           taskId: taskId,
-           added: new Date(),
-           updated: new Date(),
-           isActive: true
-
-
-         }
-       })
-     }).then((data) => {
-       return mongoAPI.getItem({db:'tasksDB',collection:'tasks',query:{"taskId":taskId}})
-     }).then((data) => {
-        return res.json(data)
-     })
-     return getData.then(data => data).catch((err) => {
-       console.log(err)
-     })
- });
+const swaggerOptions = {
+ definition: {
+   openapi: '3.0.0',
+   info: {
+     title: 'User API',
+     version: '1.0.0',
+     description: 'API for managing user tasks',
+   },
+   servers: [
+     {
+       url: 'http://localhost:3000',
+     },
+   ],
+ },
+ apis: [
+   './api/api.js',
+   './api/modules/users.js',
+   './api/modules/tasks.js'
+  ],
+};
 ```
 
-The updated function accepts the same payload as the previous version of the function. In order to generate a unique taskId, the first section of the function’s promise queries the tasks collection to determine the current size of the collection. The second section creates a new taskId by incrementing the current number of tasks by one. In the next section, the Mongo API’s writeItem method is used to add a new document to the tasks collection. The method’s payload includes the target database, collection, and data. The data object includes the received payload, a taskId, two date fields (added and updated), and an isActive flag. The third section retrieves the new tasks from the collection by its taskId. This last section returns the results of the query as a JSON object.
-
-Next, locate the PUT /update/:taskId route and replace it with the following code.
+Next, we declare a variable that consumes the Swagger options.
 
 ```javascript
-router.post('/update/:taskId', (req, res) => {
-  const getData = new Promise((resolve) => {
-     mongoAPI.updateItem({ 
-       db: 'tasksDB', 
-       collection: 'tasks', 
-       query: { taskId: req.params.taskId }, 
-       data: req.body 
-     }).then((data, err) => resolve(data))
-   }).then((data) => {
-    return mongoAPI.getItem({
-     db:'tasksDB',collection: 'tasks',query:{ taskId:req.params.taskId }
-    })
-   }).then((data) => {
-     return res.json(data)
-   })
-   return getData.then(data => data).catch((err) => console.log(err))
-});
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
 ```
 
-Here we don’t need to generate a taskId, so we can start with the relevant Mongo API (updateItem) method. In order to locate the target task document, the method includes a query. In this case, we locate the task using the route’s taskId parameter. The method data receives the route’s payload and sends it to the database. The next section queries the tasks collection and returns the updated task document. The final section returns the query as a JSON object.
-
-The last route to update is DELETE /task/:taskID. Locate the route and replace it with the following code.
+Now, we create the Swagger middleware.
 
 ```javascript
-router.post('/delete', (req, res) => {
- const getData = new Promise((resolve) => {
-   mongoAPI.updateItem({
-       db: 'tasksDB',
-       collection: 'tasks',
-       query: { "taskId": req.body.taskId },
-       data: {
-         isActive: false,
-         updated: new Date()
-      }
- }).then((data, err) => resolve(data))
- }).then((data) => {
-   console.log(data.result)
-   return mongoAPI.getItem(
-     { db: 'tasksDB', collection: 'tasks', query: { "taskId": parseInt(req.body.taskId)} }
-   )
- }).then((data) => {
-   return res.json(data)
- })
- return getData.then(data => data).catch((err) => {
-   console.log(err)
- })
-});
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 ```
 
-Note that the code doesn’t delete the task from the database’s tasks collection. This is because there may be cases that you want to reinstate a task, but do not want to show a shorter tasks list. It also simplifies our MongoAPI module because we no longer need to implement this function nationality. Now we can use the updateItem method instead. So, to delete a task we mark the task as inactive (isActive:false). This explains the existence of the isActive flag. Another thing to be aware of is that this route uses a payload instead of a parameter. This means that when you want to use this route, you must uses the following path and payload.
+The last step is to create a redirect that on opening the default url ([http://localhost:3000](http://localhost:3000)) redirects the browser to the Swagger Page. Relaunch the API, and the following is displayed.
+
+![import](swagger.png)
+
+## **Annotating Code**
+
+Now we have everything in place, we can annotate our code. We will start by opening api/modules/users.js. At the top of the file, following the variable declarations we will add component code. First, we declare a user object component. This object provides a basic example that will be reused in all our annotated routes. Depending on the data structure returned by a route and displayed in the example, the user object will be displayed as an object or as part of an array. Each annotation is formatted using [YAML](https://yaml.org/) notation.
 
 ```javascript
-POST /delete
-
-{
-    "taskId":4
-}
-
+/**
+* @swagger
+* components:
+*   schemas:
+*     User:
+*      type: object
+*      properties:
+*       _id:
+*        type: string
+*        description: Unique ID of task.
+*        example: 6630ab326e723ac1ea6dce7a
+*       email:
+*        type: string
+*        description: The user's email address.
+*        example: jg@mail.com
+*       name:
+*        type: string
+*        description: User's first and last names.
+*        example: Joe Green
+*       password:
+*        type: string
+*        description: User's password.
+*        example: password
+*       userName:
+*        type: string
+*        description: The user's name.
+*        example: joegreen
+*       userId:
+*        type: integer
+*        description: The user ID.
+*        example: 1
+*       isActive:
+*        type: boolean
+*        description: The user's status.
+*        example: true
+*       created:
+*        type: string
+*        description: The date the user was created.  
+*        example: 2021-09-23T00:00:00.000Z
+*       updated:
+*        type: string
+*        description: The date the user was last updated.
+*        example: 2021-09-23T00:00:00.000Z
+*      -ref: '#/components/schemas/User' 
+*/
 ```
 
-## **Conclusion and Next Steps**
+The annotation starts with a list of components and schemas for each component. This is followed by a list of properties. Each property starts with its name, data type (type), description, and an example.
 
-In this installment, we created and populated tasksDB’s task collection. We updated the mongo.js module to create and update tasks. We integrated tasks.js with MongoDB. This enhanced our existing querying functionality and enabled us to persist, update, and delete tasks from the database. We implemented the delete functionality by declaring a task to be inactive or active. As a result, we can reinstate deleted tasks by not removing them from the database. In the next installment, we will look at how we can test our code. On the subject of testing, I have updated the Postman collection to include all API routes and support the latest functionality. You can download it from GitHub with this [link](https://github.com/trider/node-task-api-tutorial/blob/main/node-task-api-part-06/node-task-api.postman_collection.json).
+Next we annotate the first route in the file. Following the component object, add the following annotation:
+
+```javascript
+/**
+* @swagger
+* /api/users:
+*   get:
+*     summary: Retrieve a list of users.
+*     description: Retrieve a list of users from the database.
+*     tags:
+*      - Users
+*     responses:
+*       200:
+*         description: A list of users.
+*         content:
+*           application/json:
+*             schema:
+*               type: array
+*               items:
+*                 type: object
+*                 $ref: '#/components/schemas/User'
+*/
+```
+
+The annotation starts with the route. Next, it declares the HTTP command the annotated route uses (GET). Immediately after this, is a summary, description, and tags. The tags section indicates the section in which the route is displayed. The last section describes the response and ends in a reference to the user annotation. If you refresh your browser, the following is displayed.
+
+![users](user.png)
+
+Our second annotation is for the GET /api/users/:users route. This is almost identical to the previous annotation, but is formatted to handle a parameterized URL. It includes a section that describes the parameter the URL uses.
+
+```javascript
+/**
+* **
+* @swagger
+* /api/users/{user}:
+*   get:
+*     summary: Returns a single user.
+*     description: Retrieve a single user by username.
+*     tags:
+*     - Users
+*     parameters:
+*     - in: path
+*       name: user
+*       required: true
+*       description: User name.
+*       schema:
+*         type: string
+*     responses:
+*       200:
+*         description: A user profile.
+*         content:
+*          application/json:
+*            schema:
+*              $ref: '#/components/schemas/User'
+*/
+```
+
+Refreshing the browser will display an additional section for this route. The section also includes a text box for entering the user parameter.
+
+![users](user_param.png)
+
+Finally we will annotate the POST /api/users/login route. This annotation includes a section that describes the route’s payload (requestBody).
+
+```javascript
+/**
+* **
+* @swagger
+* /api/users/login:
+*   post:
+*     summary: Login a user.
+*     tags:
+*      - Authentication
+*     description: Login a user by username and password.
+*     requestBody:
+*       required: true
+*       content:
+*         application/json:
+*           schema:
+*             type: object
+*             properties:
+*               email:
+*                 type: string
+*                 description: The user's email address.
+*                 example: jonnygold@gmail.com
+*               password:
+*                 type: string
+*                 description: The user's password.
+*                 example: 1234
+*     responses:
+*       200:
+*         description: A user profile.
+*         schema:
+*           $ref: '#/components/schemas/User' 
+* 
+*/
+```
+
+Refreshing the browser displays the annotated route and creates a request body section. It also populates each field in the request body.
+
+![login](login.png)
+
+After annotating the user routes, we can annotate the task routes. Open the tasks.js, and add a task annotation component.
+
+```javascript
+**
+* @swagger
+* components:
+*  schemas:
+*    Task:
+*     type: object
+*     properties:
+*      _id: 
+*       type: string
+*       description: Unique ID of task.
+*       example: 6630ab326e723ac1ea6dce7a
+*      description:
+*        type: string
+*        description: The task description.
+*        example: Task description
+*      name:
+*        type: string
+*        description: The task name.
+*        example: Task name
+*      taskId:
+*        type: integer
+*        description: The task ID.
+*        example: 1
+*      user:
+*        type: string
+*        description: The user name.
+*        example: joegreen
+*      added:
+*        type: string
+*        description: The date the task was added. 
+*        example: 2021-09-23T00:00:00.000Z
+*      updated:
+*        type: string
+*        description: The date the task was last updated.
+*        example: 2021-09-23T00:00:00.000Z
+*      status:
+*        type: string
+*        description: The task status.
+*        example: do
+*      isActive:
+*        type: boolean
+*        description: The task is in use.
+*        example: true
+*
+*/
+```
+
+Annotate each route with the following annotations.
+
+```javascript
+/**
+*
+* @swagger
+*  /api/tasks/user/{user}:
+*    get:
+*     summary: Retrieve a list of tasks for a user.
+*     description: Retrieve a list of tasks for a user from the database.
+*     tags:
+*     - Tasks
+*     parameters:
+*     - in: path
+*       name: user
+*       required: true
+*       description: The user name
+*       schema:
+*        type: string
+*     responses:
+*      200:
+*       description: A list of tasks for the user.
+*       content:
+*        application/json:
+*         schema:
+*          type: array
+*          items:
+*           type: object 
+*           $ref: '#/components/schemas/Task'
+*/
+
+
+router.get('/user/:user',  (req, res) =>{...});
+
+
+/**
+* @swagger
+* /api/tasks/task/{id}:
+*   get:
+*     summary: Returns a single task.
+*     description: Retrieve a single task by task ID.
+*     tags:
+*     - Tasks
+*     parameters:
+*     - in: path
+*       name: id
+*       required: true
+*       description: Task ID.
+*       schema:
+*         type: integer
+*     responses:
+*       200:
+*         description: A task.
+*         content:
+*          application/json:
+*            schema:
+*              $ref: '#/components/schemas/Task'
+*/
+router.get('/task/:taskId',  (req, res) =>{...});
+
+
+/**
+* @swagger
+* /api/tasks/add:
+*   post:
+*     summary: Create a new task.
+*     description: Create a new task in the database.
+*     tags:
+*     - Tasks
+*     requestBody:
+*       required: true
+*       content:
+*         application/json:
+*           schema:
+*            type: object
+*            properties:
+*              name:
+*                type: string
+*                description: The task name.
+*                example: A New Task
+*              description:
+*                type: string
+*                description: The task description.
+*                example: A new task description
+*              user:
+*                type: string
+*                description: The user name.
+*                example: jonnygold
+*     responses:
+*       200:
+*         description: A new task.
+*         schema:
+*           $ref: '#/components/schemas/Task'
+*/
+
+
+router.post('/add', (req, res) => {...});
+
+
+/**
+* @swagger
+* /api/tasks/update:
+*   post:
+*    summary: Update a task.
+*    tags:
+*    - Tasks
+*        properties:
+*          name:
+*           type: string
+*           description: The task name.
+*           example: A New Task 
+*          description:
+*           type: string
+*           description: The task description.
+*           example: A new task description
+*          user:
+*           type: string
+*           description: The user name. 
+*           example: jonnygold
+*          taskId:
+*            type: integer
+*            description: The task ID.
+*            example: 1
+*          status:
+*            type: string 
+*            description: The task status.
+*            example: do
+*    responses:
+*        200:
+*          description: A task.
+*          schema:
+*            $ref: '#/components/schemas/Task'
+*/
+router.post('/update/:taskId', (req, res) => {...});
+
+
+/**
+* @swagger
+* /api/tasks/delete:
+*  post:
+*   summary: Delete a task.
+*   description: Delete a task in the database.
+*   tags:
+*    - Tasks
+*   requestBody:
+*     required: true
+*     content:
+*       application/json:
+*          schema:
+*           type: object
+*           properties:
+*              taskId:
+*                type: integer
+*                description: The task ID.
+*                example: 1
+*   responses:
+*    200:
+*     description: A task.
+*     schema:
+*      $ref: '#/components/schemas/Task'
+*/
+router.post('/delete', (req, res) => {...});
+```
+
+Refresh the browser, and the fully annotated API is displayed.
+
+![all](full.png)
+
+## **Conclusion**
+
+In this installment, we documented our API with Swagger. Now, we have a full Task API, with a complete test suite, and documentation. This should serve as a good basis for building your own NodeJS and Express Framework APIs. You can also use it as a backend for any frontend projects. I want to thank everyone who has viewed, responded, or commented on each article. I have ideas for future tutorial series and hope to launch at least one in the near future.

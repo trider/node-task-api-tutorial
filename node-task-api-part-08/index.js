@@ -13,9 +13,9 @@ const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'User API',
+      title: 'Task Management API',
       version: '1.0.0',
-      description: 'API for managing users',
+      description: 'API for managing user tasks',
     },
     servers: [
       {
@@ -32,23 +32,18 @@ const swaggerOptions = {
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
-app.use('/api-docs', swaggerUi.serve);
-app.get('/api-docs', swaggerUi.setup(swaggerSpec));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 app.get('/', (req, res) => {
   res.redirect('/api-docs');
 });
 
-
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/api', api);
 
 app.use((req, res, next) => {
  console.log(`${req.method} ${req.url}`);
  next();
 });
 
-
-app.listen(3000, () => {
-  console.log('Server is running on port 3000');
-});
 
 module.exports = app;

@@ -16,5 +16,4 @@ app.get('/', (req, res) => {
   res.redirect('/api');
 });
 
-
 module.exports = app;
